@@ -1,4 +1,38 @@
-use std::cmp::Ordering;
+use std::{cmp::Ordering, collections::BTreeMap, fs::File, io::Write};
+
+pub struct ClassContainer {
+    classes: BTreeMap<String, [u8; 5]>,
+    class_name: ClassName,
+}
+
+impl Default for ClassContainer {
+    fn default() -> Self {
+        Self {
+            classes: BTreeMap::default(),
+            class_name: ClassName::default(),
+        }
+    }
+}
+
+impl ClassContainer {
+    pub fn add(&mut self, key: String) {
+        if !self.classes.contains_key(&key) {
+            if let Some(v) = self.class_name.next() {
+                self.classes.insert(key, v);
+            }
+        }
+    }
+
+    pub fn show(&self) {
+        for i in &self.classes {
+            println!("{}", i.0);
+            println!("{}", ClassName::convert(*i.1));
+        }
+    }
+
+    pub fn to_file(&self, mut content: String) {}
+}
+
 pub struct ClassName {
     array: [u8; 5],
     current_index: usize,
