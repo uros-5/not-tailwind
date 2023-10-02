@@ -1,68 +1,54 @@
-use std::{cmp::Ordering, collections::BTreeMap, fs::File, io::Write};
+use std::{
+    cmp::Ordering,
+    collections::{btree_map::Entry, BTreeMap},
+};
 
-pub struct ClassContainer {
-    classes: BTreeMap<String, [u8; 5]>,
-    class_name: ClassName,
+type OneClass = [u8; 5];
+
+pub enum CSSToken {
+    Class,
+    CustomProperty,
 }
 
-impl Default for ClassContainer {
-    fn default() -> Self {
-        Self {
-            classes: BTreeMap::default(),
-            class_name: ClassName::default(),
-        }
-    }
+#[derive(Default, Clone, PartialEq, Eq)]
+pub struct ClassContainer {
+    class_name: ClassIter,
+    container: [BTreeMap<String, String>; 2],
 }
 
 impl ClassContainer {
-    pub fn add(&mut self, key: String) {
-        if !self.classes.contains_key(&key) {
-            if let Some(v) = self.class_name.next() {
-                self.classes.insert(key, v);
+    pub fn add(&mut self, key: String, token: CSSToken) {
+        let index = token as usize;
+        if let Some(map) = self.container.get_mut(index) {
+            if let Entry::Vacant(e) = map.entry(css_to_html(&key)) {
+                if let Some(v) = self.class_name.next() {
+                    e.insert(new_class(&v));
+                }
             }
         }
     }
 
-    pub fn show(&self) {
-        for i in &self.classes {
-            println!("{}", i.0);
-            println!("{}", ClassName::convert(*i.1));
+    pub fn get(&self, key: String, container: CSSToken) -> Option<String> {
+        let index = container as usize;
+        if let Some(map) = self.container.get(index) {
+            if let Some(v) = map.get(&key) {
+                return Some(v.to_string());
+            }
         }
+        None
     }
-
-    pub fn to_file(&self, mut content: String) {}
 }
 
-pub struct ClassName {
-    array: [u8; 5],
+#[derive(Clone, PartialEq, Eq, Default)]
+pub struct ClassIter {
+    array: OneClass,
     current_index: usize,
 }
 
-impl ClassName {
-    fn convert(a: [u8; 5]) -> String {
-        let mut s = String::new();
-        for i in a {
-            if i == 0 {
-                break;
-            }
-            let c = 96_u8 + i;
-            s.push(c as char);
-        }
-        s
-    }
-}
+impl ClassIter {}
 
-impl Default for ClassName {
-    fn default() -> Self {
-        ClassName {
-            array: [1, 0, 0, 0, 0],
-            current_index: 0,
-        }
-    }
-}
-
-impl Iterator for ClassName {
-    type Item = [u8; 5];
+impl Iterator for ClassIter {
+    type Item = OneClass;
 
     fn next(&mut self) -> Option<Self::Item> {
         let current = self.array;
@@ -86,7 +72,6 @@ impl Iterator for ClassName {
                 }
             }
             if add_new {
-                //
                 if self.current_index == 4 {
                     return None;
                 }
@@ -101,4 +86,26 @@ impl Iterator for ClassName {
         }
         Some(current)
     }
+}
+
+fn css_to_html(old: &str) -> String {
+    if old.starts_with('.') {
+        let mut chars = old.chars();
+        chars.next();
+        chars.as_str().replace('\\', "")
+    } else {
+        String::from(old)
+    }
+}
+
+fn new_class(new_class: &OneClass) -> String {
+    let mut s = String::new();
+    for i in new_class {
+        if i == &0 {
+            break;
+        }
+        let c = 96_u8 + i;
+        s.push(c as char);
+    }
+    s
 }
