@@ -1,7 +1,10 @@
 use std::{
     cmp::Ordering,
     collections::{btree_map::Entry, BTreeMap},
+    fs,
 };
+
+use lightningcss::stylesheet::{PrinterOptions, StyleSheet};
 
 type OneClass = [u8; 5];
 
@@ -12,20 +15,36 @@ pub enum CSSToken {
 
 #[derive(Default, Clone, PartialEq, Eq)]
 pub struct ClassContainer {
-    class_name: ClassIter,
+    class_name: [ClassIter; 2],
     container: [BTreeMap<String, String>; 2],
 }
 
+impl Default for ClassIter {
+    fn default() -> Self {
+        ClassIter {
+            array: [1, 0, 0, 0, 0],
+            current_index: 0,
+        }
+    }
+}
+
 impl ClassContainer {
-    pub fn add(&mut self, key: String, token: CSSToken) {
+    pub fn add(&mut self, key: String, token: CSSToken) -> Option<String> {
         let index = token as usize;
         if let Some(map) = self.container.get_mut(index) {
-            if let Entry::Vacant(e) = map.entry(css_to_html(&key)) {
-                if let Some(v) = self.class_name.next() {
-                    e.insert(new_class(&v));
+            let oldclass = css_to_html(&key);
+            match map.entry(oldclass) {
+                Entry::Vacant(entry) => {
+                    if let Some(new) = self.class_name[index].next() {
+                        return Some(entry.insert(new_class(&new)).to_string());
+                    }
+                }
+                Entry::Occupied(entry) => {
+                    return Some(entry.get().clone());
                 }
             }
         }
+        None
     }
 
     pub fn get(&self, key: String, container: CSSToken) -> Option<String> {
@@ -37,9 +56,17 @@ impl ClassContainer {
         }
         None
     }
+
+    pub fn into_file(&self, stylesheet: StyleSheet) {
+        let mut opt = PrinterOptions::default();
+        opt.minify = true;
+        if let Ok(f) = stylesheet.to_css(opt) {
+            let _ = fs::write("src/output.css", &f.code);
+        }
+    }
 }
 
-#[derive(Clone, PartialEq, Eq, Default)]
+#[derive(Clone, PartialEq, Eq)]
 pub struct ClassIter {
     array: OneClass,
     current_index: usize,

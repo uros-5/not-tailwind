@@ -1,16 +1,13 @@
-pub mod checker;
-pub mod short_tailwind;
+pub mod config;
+pub mod short_classes;
+pub mod starter;
+pub mod visit_selectors;
 
+#[cfg(test)]
 mod tests {
-    use crate::checker::parse;
-    use std::fs::read_to_string;
-
+    use crate::starter::start;
     #[test]
-    fn a() {
-        if let Ok(f) = read_to_string("input.css") {
-            parse(f, true, true, true);
-
-            assert!(false);
-        }
+    fn t() {
+        start();
     }
 }
