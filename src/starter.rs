@@ -1,7 +1,4 @@
-use std::{
-    fs::read_to_string,
-    path::{Path, PathBuf},
-};
+use std::{fs::read_to_string, path::Path};
 
 use lightningcss::{
     stylesheet::{ParserOptions, PrinterOptions, StyleSheet},
@@ -10,71 +7,33 @@ use lightningcss::{
 
 use crate::{
     config::{read_config, Config},
-    visit_selectors::PreSelectorVisitor,
+    visit_class::check_html,
+    visit_selectors::ClassVisitor,
 };
 
 pub fn start_all() {
     let config = read_config();
     match config {
         Ok(config) => {
-            let mut msv = PreSelectorVisitor::default();
-            create_new_css(&config, &mut msv);
-        }
-        Err(e) => {}
-    }
-    // if let Ok(s) = read_to_string("chooser.txt") {}
-}
+            let mut css_walker = CSSWalker::default();
 
-pub fn create_new_css(config: &Config, msv: &mut PreSelectorVisitor) {
-    for dir in &config.css_dir {
-        walk_css(dir, config, msv);
-    }
-}
+            for dir in &config.css_dir {
+                css_walker.walk_tree(dir, &config);
+            }
 
-fn walk_css(dir: &String, config: &Config, msv: &mut PreSelectorVisitor) {
-    if let Ok(paths) = std::fs::read_dir(dir) {
-        for path in paths.flatten() {
-            if let Ok(meta) = path.metadata() {
-                if meta.is_file() {
-                    if let Ok(s) = read_to_string(path.path()) {
-                        let a = StyleSheet::parse(&s, ParserOptions::default());
-                        if let Ok(mut stylesheet) = a {
-                            let _ = stylesheet.visit(msv);
-                            let opt = PrinterOptions {
-                                minify: true,
-                                ..Default::default()
-                            };
-                            if let Ok(f) = stylesheet.to_css(opt) {
-                                let output_path = Path::new(&config.output_dir);
-                                let p = output_path.join(handle_path(&path.path()));
-                                if let Some(parent) = p.parent() {
-                                    let _ = std::fs::create_dir_all(parent);
-                                    let _ = std::fs::write(p, &f.code);
-                                }
-                            }
-                        }
-                    }
-                } else if meta.is_dir() {
-                    walk_css(dir, config, msv);
-                }
+            let mut html_walker = HTMLWalker::new(&css_walker.class_visitor);
+
+            for dir in &config.html_dir {
+                html_walker.walk_tree(dir, &config);
             }
         }
+        Err(e) => {
+            println!("{}", e);
+        }
     }
 }
 
-pub fn create_html(config: &Config) {
-    //
-}
-
-pub fn create_js(config: &Config) {
-    //
-}
-
-pub fn create_svg(config: &Config) {
-    //
-}
-
-fn handle_path(path: &PathBuf) -> &Path {
+fn handle_path(path: &Path) -> &Path {
     if path.starts_with(".") {
         if let Some(path2) = path.to_str() {
             let mut path2 = path2.chars();
@@ -83,6 +42,77 @@ fn handle_path(path: &PathBuf) -> &Path {
             return Path::new(path2.as_str());
         }
     }
-    path.as_path()
-    // Path::from(path.to_str())
+    path
+}
+
+trait TreeWalker {
+    fn walk(&mut self, old_content: String) -> Option<String>;
+
+    fn write(&self, path: &Path, new_content: &str, config: &Config) {
+        let output_path = Path::new(&config.output_dir);
+        let p = output_path.join(handle_path(path));
+        if let Some(parent) = p.parent() {
+            let _ = std::fs::create_dir_all(parent);
+            let _ = std::fs::write(p, new_content);
+        }
+    }
+
+    fn walk_tree(&mut self, dir: &String, config: &Config) {
+        if let Ok(paths) = std::fs::read_dir(dir) {
+            for path in paths.flatten() {
+                if let Ok(meta) = path.metadata() {
+                    if meta.is_file() {
+                        if let Ok(old_content) = read_to_string(path.path()) {
+                            if let Some(new_content) = self.walk(old_content) {
+                                self.write(&path.path(), &new_content, config);
+                            }
+                        }
+                    } else if meta.is_dir() {
+                        self.walk_tree(dir, config);
+                    }
+                }
+            }
+        }
+    }
+}
+
+#[derive(Default)]
+struct CSSWalker {
+    pub class_visitor: ClassVisitor,
+}
+
+impl TreeWalker for CSSWalker {
+    fn walk(&mut self, old_content: String) -> Option<String> {
+        let a = StyleSheet::parse(&old_content, ParserOptions::default());
+        if let Ok(mut stylesheet) = a {
+            let _ = stylesheet.visit(&mut self.class_visitor);
+            let opt = PrinterOptions {
+                minify: true,
+                ..Default::default()
+            };
+            if let Ok(f) = stylesheet.to_css(opt) {
+                return Some(f.code);
+            }
+        }
+        None
+    }
+}
+
+struct HTMLWalker<'a> {
+    pub class_visitor: &'a ClassVisitor,
+}
+
+impl<'a> HTMLWalker<'a> {
+    pub fn new(class_visitor: &'a ClassVisitor) -> Self {
+        Self { class_visitor }
+    }
+}
+
+impl<'a> TreeWalker for HTMLWalker<'a> {
+    fn walk(&mut self, old_content: String) -> Option<String> {
+        if let Ok(html) = check_html(&old_content, self.class_visitor) {
+            return Some(html);
+        }
+        None
+    }
 }

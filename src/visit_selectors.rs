@@ -10,17 +10,25 @@ use crate::short_classes::{CSSToken, ClassContainer};
 use lightningcss::stylesheet::StyleSheet;
 
 #[derive(Clone, PartialEq, Eq, Default)]
-pub struct PreSelectorVisitor {
+pub struct ClassVisitor {
     container: ClassContainer,
 }
 
-impl PreSelectorVisitor {
+impl ClassVisitor {
     pub fn show(&self, stylesheet: StyleSheet) {
         self.container.into_file(stylesheet);
     }
+
+    pub fn a(&self) {
+        println!("a")
+    }
+
+    pub fn get(&self, class: &str) -> Option<String> {
+        self.container.get(class.to_owned(), CSSToken::Class)
+    }
 }
 
-impl<'i> Visitor<'i> for PreSelectorVisitor {
+impl<'i> Visitor<'i> for ClassVisitor {
     type Error = ();
 
     fn visit_types(&self) -> VisitTypes {
