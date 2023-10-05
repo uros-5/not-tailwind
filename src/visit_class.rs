@@ -4,7 +4,10 @@ use lol_html::{self, element, HtmlRewriter, Settings};
 
 use crate::visit_selectors::ClassVisitor;
 
-pub fn check_html(document: &str, msv: &ClassVisitor) -> Result<String, FromUtf8Error> {
+pub fn check_html(
+    document: &str,
+    msv: &ClassVisitor,
+) -> Result<String, FromUtf8Error> {
     let mut output = vec![];
     let mut rewriter = HtmlRewriter::new(
         Settings {

@@ -15,16 +15,22 @@ pub fn start_all() {
     let config = read_config();
     match config {
         Ok(config) => {
-            let mut css_walker = CSSWalker::default();
+            let validate = config.validate();
+            if config.validate().is_ok() {
+                let mut css_walker = CSSWalker::default();
 
-            for dir in &config.css_dir {
-                css_walker.walk_tree(dir, &config);
-            }
+                for dir in &config.css_dir {
+                    css_walker.walk_tree(dir, &config);
+                }
 
-            let mut html_walker = HTMLWalker::new(&css_walker.class_visitor);
+                let mut html_walker =
+                    HTMLWalker::new(&css_walker.class_visitor);
 
-            for dir in &config.html_dir {
-                html_walker.walk_tree(dir, &config);
+                for dir in &config.html_dir {
+                    html_walker.walk_tree(dir, &config);
+                }
+            } else {
+                println!("{}", validate.err().unwrap());
             }
         }
         Err(e) => {
@@ -34,7 +40,7 @@ pub fn start_all() {
 }
 
 fn handle_path(path: &Path) -> &Path {
-    if path.starts_with(".") {
+    if path.starts_with("./") {
         if let Some(path2) = path.to_str() {
             let mut path2 = path2.chars();
             path2.next();

@@ -8,10 +8,11 @@ pub struct Config {
     pub output_dir: String,
     pub svg_dir: Option<Vec<String>>,
     pub js_dir: Option<Vec<String>>,
+    pub ignored_css_files: Option<Vec<String>>,
 }
 
 pub fn read_config<'a>() -> Result<Config, ConfigError<'a>> {
-    match std::fs::read_to_string("abc-css.toml") {
+    match std::fs::read_to_string("css-knife.toml") {
         Ok(s) => match toml::from_str::<Config>(&s) {
             Ok(config) => Ok(config),
             Err(e) => Err(ConfigError::ConfigNotFound(e.to_string())),
@@ -22,8 +23,14 @@ pub fn read_config<'a>() -> Result<Config, ConfigError<'a>> {
 
 impl Config {
     pub fn validate(&self) -> Result<(), ConfigError> {
-        self.check_dirs(&self.html_dir, ConfigError::EmptyDir(ConfigDir::HTMLDir))?;
-        self.check_dirs(&self.css_dir, ConfigError::EmptyDir(ConfigDir::CSSDir))?;
+        self.check_dirs(
+            &self.html_dir,
+            ConfigError::EmptyDir(ConfigDir::HTMLDir),
+        )?;
+        self.check_dirs(
+            &self.css_dir,
+            ConfigError::EmptyDir(ConfigDir::CSSDir),
+        )?;
         let output = metadata(&self.output_dir);
         match output {
             Ok(data) => {
@@ -72,6 +79,7 @@ pub enum ConfigDir {
     CSSDir,
     JSDir,
     SVGDir,
+    IgnoredCssDir,
 }
 
 impl std::fmt::Display for ConfigDir {
@@ -81,6 +89,7 @@ impl std::fmt::Display for ConfigDir {
             ConfigDir::CSSDir => write!(f, "CSS"),
             ConfigDir::JSDir => write!(f, "JS"),
             ConfigDir::SVGDir => write!(f, "SVG"),
+            ConfigDir::IgnoredCssDir => write!(f, "ignored css files"),
         }
     }
 }
@@ -96,14 +105,20 @@ pub enum ConfigError<'a> {
 impl<'a> std::fmt::Display for ConfigError<'a> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match &self {
-            ConfigError::NoOutputDir => write!(f, "Output directory not found."),
-            ConfigError::EmptyDir(dir) => write!(f, "Array of directories for {} is empty.", dir),
-            ConfigError::NotDir(item) => write!(f, "Specified item({}) is not directory.", item),
-            ConfigError::ConfigNotFound(err) => write!(f, "Config not found: {}", err),
+            ConfigError::NoOutputDir => {
+                write!(f, "Output directory not found.")
+            }
+            ConfigError::EmptyDir(dir) => {
+                write!(f, "Array of directories for {} is empty.", dir)
+            }
+            ConfigError::NotDir(item) => {
+                write!(f, "Specified item({}) is not directory.", item)
+            }
+            ConfigError::ConfigNotFound(err) => {
+                write!(f, "Config not found: {}", err)
+            }
         }
     }
 }
 
-impl<'a> Error for ConfigError<'a> {
-    //
-}
+impl<'a> Error for ConfigError<'a> {}

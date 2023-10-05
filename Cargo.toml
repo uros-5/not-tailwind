@@ -1,14 +1,27 @@
 [package]
-name = "short-tailwind"
+name = "css-knife"
 version = "0.1.0"
 edition = "2021"
-
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+authors = ["uros-5"]
+license = "MIT"
+description = "A tool for shortening css classes"
+readme = "README.md"
+homepage = "https://github.com/uros-5/css-knife"
+repository = "https://github.com/uros-5/css-knife"
+keywords = ["tailwindcss", "css", "html"]
+categories = ["command-line-utilites"]
 
 [dependencies]
-cssparser = "0.33.0"
-html5ever = "0.26.0"
 lightningcss = { version="1.0.0-alpha.47", features = ["visitor", "jsonschema"] }
+lol_html = "1.2.0"
 parcel_selectors = { version="0.26.2"  }
+scraper = "0.17.1"
 serde = {version = "1.0.188", features = ["derive"]}
 toml = "0.8.2"
+
+[profile.dev]
+opt-level = 1
+
+[profile.release]
+strip = true
+opt-level = 3

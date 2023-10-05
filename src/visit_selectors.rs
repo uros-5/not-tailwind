@@ -36,12 +36,17 @@ impl<'i> Visitor<'i> for ClassVisitor {
     }
 
     #[allow(clippy::collapsible_match)]
-    fn visit_selector(&mut self, selector: &mut Selector<'i>) -> Result<(), Self::Error> {
+    fn visit_selector(
+        &mut self,
+        selector: &mut Selector<'i>,
+    ) -> Result<(), Self::Error> {
         let iter = selector.iter_mut_raw_match_order();
         for i in iter {
             match i {
                 Component::Class(c) => {
-                    if let Some(n) = self.container.add(c.0.to_string(), CSSToken::Class) {
+                    if let Some(n) =
+                        self.container.add(c.0.to_string(), CSSToken::Class)
+                    {
                         c.0 = CowArcStr::from(n);
                     }
                 }

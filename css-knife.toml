@@ -1,0 +1,3 @@
+html_dir = ["web/src/templates"]
+css_dir = ["web/src/css"]
+output_dir = "prod"
