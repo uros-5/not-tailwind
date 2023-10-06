@@ -1,4 +1,7 @@
-use std::{fs::read_to_string, path::Path};
+use std::{
+    fs::{self, read_to_string},
+    path::Path,
+};
 
 use lightningcss::{
     stylesheet::{ParserOptions, PrinterOptions, StyleSheet},
@@ -54,12 +57,17 @@ fn handle_path(path: &Path) -> &Path {
 trait TreeWalker {
     fn walk(&mut self, old_content: String) -> Option<String>;
 
-    fn write(&self, path: &Path, new_content: &str, config: &Config) {
+    fn write(&self, path: &Path, new_content: Option<&str>, config: &Config) {
         let output_path = Path::new(&config.output_dir);
-        let p = output_path.join(handle_path(path));
-        if let Some(parent) = p.parent() {
+        let new_path = output_path.join(handle_path(path));
+        if let Some(parent) = new_path.parent() {
+            dbg!(path);
             let _ = std::fs::create_dir_all(parent);
-            let _ = std::fs::write(p, new_content);
+            if let Some(new_content) = new_content {
+                let _ = std::fs::write(new_path, new_content);
+            } else {
+                let _ = fs::copy(path, new_path);
+            }
         }
     }
 
@@ -70,8 +78,14 @@ trait TreeWalker {
                     if meta.is_file() {
                         if let Ok(old_content) = read_to_string(path.path()) {
                             if let Some(new_content) = self.walk(old_content) {
-                                self.write(&path.path(), &new_content, config);
+                                self.write(
+                                    &path.path(),
+                                    Some(&new_content),
+                                    config,
+                                );
                             }
+                        } else {
+                            self.write(&path.path(), None, config)
                         }
                     } else if meta.is_dir() {
                         self.walk_tree(dir, config);

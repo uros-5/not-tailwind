@@ -32,7 +32,7 @@ Configuration(*css-knife.toml*):
 html_dir = ["web/src/templates"]
 css_dir = ["web/src/css"]
 js_dir = ["web/src/js"]
-svg_dir = ["web/src/svg"]
+assets_dir = ["web/src/svg"]
 output_dir = "prod"
 ```
 

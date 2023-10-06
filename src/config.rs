@@ -6,7 +6,7 @@ pub struct Config {
     pub html_dir: Vec<String>,
     pub css_dir: Vec<String>,
     pub output_dir: String,
-    pub svg_dir: Option<Vec<String>>,
+    pub assets_dir: Option<Vec<String>>,
     pub js_dir: Option<Vec<String>>,
     pub ignored_css_files: Option<Vec<String>>,
 }
@@ -42,8 +42,11 @@ impl Config {
                 return Err(ConfigError::NoOutputDir);
             }
         }
-        if let Some(svg) = &self.svg_dir {
-            self.check_dirs(svg, ConfigError::EmptyDir(ConfigDir::SVGDir))?;
+        if let Some(assets) = &self.assets_dir {
+            self.check_dirs(
+                assets,
+                ConfigError::EmptyDir(ConfigDir::AssetsDir),
+            )?;
         }
         if let Some(js) = &self.js_dir {
             self.check_dirs(js, ConfigError::EmptyDir(ConfigDir::JSDir))?;
@@ -78,7 +81,7 @@ pub enum ConfigDir {
     HTMLDir,
     CSSDir,
     JSDir,
-    SVGDir,
+    AssetsDir,
     IgnoredCssDir,
 }
 
@@ -88,7 +91,7 @@ impl std::fmt::Display for ConfigDir {
             ConfigDir::HTMLDir => write!(f, "HTML"),
             ConfigDir::CSSDir => write!(f, "CSS"),
             ConfigDir::JSDir => write!(f, "JS"),
-            ConfigDir::SVGDir => write!(f, "SVG"),
+            ConfigDir::AssetsDir => write!(f, "Asset"),
             ConfigDir::IgnoredCssDir => write!(f, "ignored css files"),
         }
     }

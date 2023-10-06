@@ -19,10 +19,6 @@ impl ClassVisitor {
         self.container.into_file(stylesheet);
     }
 
-    pub fn a(&self) {
-        println!("a")
-    }
-
     pub fn get(&self, class: &str) -> Option<String> {
         self.container.get(class.to_owned(), CSSToken::Class)
     }
