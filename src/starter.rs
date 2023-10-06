@@ -32,6 +32,11 @@ pub fn start_all() {
                 for dir in &config.html_dir {
                     html_walker.walk_tree(dir, &config);
                 }
+                if let Some(assets_dir) = &config.assets_dir {
+                    for dir in assets_dir {
+                        html_walker.walk_tree(dir, &config);
+                    }
+                }
             } else {
                 println!("{}", validate.err().unwrap());
             }
