@@ -1,14 +1,41 @@
 use crate::visit_selectors::ClassVisitor;
 
-use swc_core::ecma::{
-    ast::Program,
-    atoms::JsWordStaticSet,
-    transforms::testing::test,
-    visit::{as_folder, FoldWith, VisitMut},
+use swc_core::{
+    common::{sync::Lrc, FileName, SourceMap},
+    ecma::{
+        ast::Program,
+        parser::{lexer::Lexer, Parser, StringInput},
+        transforms,
+        visit::{VisitAll, VisitAllWith, VisitMut},
+    },
 };
-use swc_core::plugin::{
-    plugin_transform, proxies::TransformPluginProgramMetadata,
-};
+
+pub fn check_js<'a>(class_visitor: &'a ClassVisitor) {
+    let mut map_visitor = MapVisitor::new(class_visitor);
+    let cm: Lrc<SourceMap> = Default::default();
+    let fm = cm.new_source_file(
+        FileName::Custom("test.js".into()),
+        "let a = new Map(); a.set('text-2xl', 'text-2xl')".into(),
+    );
+    let lexer = Lexer::new(
+        swc_core::ecma::parser::Syntax::Es(Default::default()),
+        Default::default(),
+        StringInput::from(&*fm),
+        None,
+    );
+    let mut parser = Parser::new_from(lexer);
+    let s = parser.parse_program();
+    match s {
+        Ok(mut p) => {
+            p.visit_all_children_with(&mut map_visitor);
+            // dbg!(p);
+        }
+        Err(_) => todo!(),
+    }
+
+    // let parsed = Program::
+    // let parsed = parse_options()
+}
 
 pub struct MapVisitor<'a> {
     pub is_set: bool,
@@ -56,4 +83,24 @@ impl<'a> VisitMut for MapVisitor<'a> {
             }
         }
     }
+}
+
+impl<'a> VisitAll for MapVisitor<'a> {
+    fn visit_ident(&mut self, n: &swc_core::ecma::ast::Ident) {
+        dbg!(n);
+    }
+}
+
+impl<'a> VisitAllWith<MapVisitor<'a>> for MapVisitor<'a> {
+    #[doc = r" Calls a visitor method (v.visit_xxx) with self."]
+    fn visit_all_with(&self, v: &mut MapVisitor<'a>) {
+        println!("what");
+        todo!()
+    }
+
+    #[doc = r" Visit children nodes of self with `v`"]
+    fn visit_all_children_with(&self, v: &mut MapVisitor<'a>) {
+        todo!()
+    }
+    //
 }

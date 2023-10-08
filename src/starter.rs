@@ -141,3 +141,26 @@ impl<'a> TreeWalker for HTMLWalker<'a> {
         None
     }
 }
+
+struct JSWalker<'a> {
+    pub class_visitor: &'a ClassVisitor,
+}
+
+impl<'a> JSWalker<'a> {
+    pub fn new(class_visitor: &'a ClassVisitor) -> Self {
+        Self { class_visitor }
+    }
+}
+
+impl<'a> TreeWalker for JSWalker<'a> {
+    fn walk(&mut self, old_content: String) -> Option<String> {
+        if let Ok(html) = check_html(&old_content, self.class_visitor) {
+            return Some(html);
+        }
+        None
+    }
+}
+
+pub fn no() {
+    let code = "let m = new Map(); m.set('text-2xl', '');";
+}
