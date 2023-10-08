@@ -1,3 +1,4 @@
-html_dir = ["web/src/templates"]
-css_dir = ["web/src/css"]
+html_dir = ["web/templates"]
+css_dir = ["web/css"]
+js_map = ["web/js/tailwind"]
 output_dir = "prod"

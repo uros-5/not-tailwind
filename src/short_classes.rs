@@ -58,10 +58,12 @@ impl ClassContainer {
     }
 
     pub fn into_file(&self, stylesheet: StyleSheet) {
-        let mut opt = PrinterOptions::default();
-        opt.minify = true;
+        let opt = PrinterOptions {
+            minify: true,
+            ..Default::default()
+        };
         if let Ok(f) = stylesheet.to_css(opt) {
-            let _ = fs::write("src/output.css", &f.code);
+            let _ = fs::write("src/output.css", f.code);
         }
     }
 }

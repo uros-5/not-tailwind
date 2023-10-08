@@ -2,20 +2,22 @@ use crate::visit_selectors::ClassVisitor;
 
 use swc_core::{
     common::{sync::Lrc, FileName, SourceMap},
+    ecma::codegen::{text_writer::JsWriter, Emitter},
     ecma::{
-        ast::Program,
         parser::{lexer::Lexer, Parser, StringInput},
-        transforms,
-        visit::{VisitAll, VisitAllWith, VisitMut},
+        visit::{as_folder, FoldWith, VisitMut},
     },
 };
 
-pub fn check_js<'a>(class_visitor: &'a ClassVisitor) {
-    let mut map_visitor = MapVisitor::new(class_visitor);
+pub fn check_js(
+    old_content: &String,
+    class_visitor: &ClassVisitor,
+) -> Option<Vec<u8>> {
+    let map_visitor = MapVisitor::new(class_visitor);
     let cm: Lrc<SourceMap> = Default::default();
     let fm = cm.new_source_file(
         FileName::Custom("test.js".into()),
-        "let a = new Map(); a.set('text-2xl', 'text-2xl')".into(),
+        old_content.into(),
     );
     let lexer = Lexer::new(
         swc_core::ecma::parser::Syntax::Es(Default::default()),
@@ -25,16 +27,35 @@ pub fn check_js<'a>(class_visitor: &'a ClassVisitor) {
     );
     let mut parser = Parser::new_from(lexer);
     let s = parser.parse_program();
-    match s {
-        Ok(mut p) => {
-            p.visit_all_children_with(&mut map_visitor);
-            // dbg!(p);
-        }
-        Err(_) => todo!(),
-    }
+    let mut code = vec![];
+    let mut srcmap = vec![];
 
-    // let parsed = Program::
-    // let parsed = parse_options()
+    match s {
+        Ok(program) => {
+            let program = program.fold_with(&mut as_folder(map_visitor));
+
+            {
+                let mut emitter = Emitter {
+                    cfg: Default::default(),
+                    cm: cm.clone(),
+                    comments: None,
+                    wr: JsWriter::new(
+                        cm.clone(),
+                        "\n",
+                        &mut code,
+                        Some(&mut srcmap),
+                    ),
+                };
+                if let Some(module) = program.as_script() {
+                    if emitter.emit_script(module).is_ok() {
+                        return Some(code);
+                    }
+                }
+                None
+            }
+        }
+        Err(_) => None,
+    }
 }
 
 pub struct MapVisitor<'a> {
@@ -83,24 +104,4 @@ impl<'a> VisitMut for MapVisitor<'a> {
             }
         }
     }
-}
-
-impl<'a> VisitAll for MapVisitor<'a> {
-    fn visit_ident(&mut self, n: &swc_core::ecma::ast::Ident) {
-        dbg!(n);
-    }
-}
-
-impl<'a> VisitAllWith<MapVisitor<'a>> for MapVisitor<'a> {
-    #[doc = r" Calls a visitor method (v.visit_xxx) with self."]
-    fn visit_all_with(&self, v: &mut MapVisitor<'a>) {
-        println!("what");
-        todo!()
-    }
-
-    #[doc = r" Visit children nodes of self with `v`"]
-    fn visit_all_children_with(&self, v: &mut MapVisitor<'a>) {
-        todo!()
-    }
-    //
 }

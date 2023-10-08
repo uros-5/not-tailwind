@@ -11,6 +11,7 @@ use lightningcss::{
 use crate::{
     config::{read_config, Config},
     visit_class::check_html,
+    visit_map::check_js,
     visit_selectors::ClassVisitor,
 };
 
@@ -32,6 +33,13 @@ pub fn start_all() {
                 for dir in &config.html_dir {
                     html_walker.walk_tree(dir, &config);
                 }
+                let mut js_walker = JSWalker::new(&css_walker.class_visitor);
+                if let Some(js) = &config.js_map {
+                    for dir in js {
+                        js_walker.walk_tree(dir, &config);
+                    }
+                }
+
                 if let Some(assets_dir) = &config.assets_dir {
                     for dir in assets_dir {
                         html_walker.walk_tree(dir, &config);
@@ -66,7 +74,6 @@ trait TreeWalker {
         let output_path = Path::new(&config.output_dir);
         let new_path = output_path.join(handle_path(path));
         if let Some(parent) = new_path.parent() {
-            dbg!(path);
             let _ = std::fs::create_dir_all(parent);
             if let Some(new_content) = new_content {
                 let _ = std::fs::write(new_path, new_content);
@@ -154,13 +161,11 @@ impl<'a> JSWalker<'a> {
 
 impl<'a> TreeWalker for JSWalker<'a> {
     fn walk(&mut self, old_content: String) -> Option<String> {
-        if let Ok(html) = check_html(&old_content, self.class_visitor) {
-            return Some(html);
+        if let Some(html) = check_js(&old_content, self.class_visitor) {
+            if let Ok(html) = String::from_utf8(html) {
+                return Some(html);
+            }
         }
         None
     }
-}
-
-pub fn no() {
-    let code = "let m = new Map(); m.set('text-2xl', '');";
 }

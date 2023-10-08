@@ -7,7 +7,7 @@ pub struct Config {
     pub css_dir: Vec<String>,
     pub output_dir: String,
     pub assets_dir: Option<Vec<String>>,
-    pub js_dir: Option<Vec<String>>,
+    pub js_map: Option<Vec<String>>,
     pub ignored_css_files: Option<Vec<String>>,
 }
 
@@ -48,7 +48,7 @@ impl Config {
                 ConfigError::EmptyDir(ConfigDir::AssetsDir),
             )?;
         }
-        if let Some(js) = &self.js_dir {
+        if let Some(js) = &self.js_map {
             self.check_dirs(js, ConfigError::EmptyDir(ConfigDir::JSDir))?;
         }
         Ok(())

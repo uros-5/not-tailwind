@@ -17,6 +17,9 @@ lol_html = "1.2.0"
 parcel_selectors = { version="0.26.2"  }
 scraper = "0.17.1"
 serde = {version = "1.0.188", features = ["derive"]}
+string_cache = "0.8.7"
+swc_core = { version = "0.83.*", features = ["ecma_plugin_transform", "__parser", "ecma_codegen"] }
+swc_ecma_parser = {version = "0.141.0", features = ["swc_ecma_visit", "debug"]}
 toml = "0.8.2"
 
 [profile.dev]
