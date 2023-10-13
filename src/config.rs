@@ -9,6 +9,7 @@ pub struct Config {
     pub assets_dir: Option<Vec<String>>,
     pub js_map: Option<Vec<String>>,
     pub ignored_css_files: Option<Vec<String>>,
+    pub macro_classes: Option<Vec<String>>,
 }
 
 pub fn read_config<'a>() -> Result<Config, ConfigError<'a>> {
@@ -51,6 +52,12 @@ impl Config {
         if let Some(js) = &self.js_map {
             self.check_dirs(js, ConfigError::EmptyDir(ConfigDir::JSDir))?;
         }
+        if let Some(macro_classes) = &self.macro_classes {
+            self.check_dirs(
+                macro_classes,
+                ConfigError::EmptyDir(ConfigDir::MacroClasses),
+            )?;
+        }
         Ok(())
     }
 
@@ -83,6 +90,7 @@ pub enum ConfigDir {
     JSDir,
     AssetsDir,
     IgnoredCssDir,
+    MacroClasses,
 }
 
 impl std::fmt::Display for ConfigDir {
@@ -93,6 +101,7 @@ impl std::fmt::Display for ConfigDir {
             ConfigDir::JSDir => write!(f, "JS"),
             ConfigDir::AssetsDir => write!(f, "Asset"),
             ConfigDir::IgnoredCssDir => write!(f, "ignored css files"),
+            ConfigDir::MacroClasses => write!(f, "macro files"),
         }
     }
 }

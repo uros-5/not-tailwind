@@ -21,6 +21,7 @@ string_cache = "0.8.7"
 swc_core = { version = "0.83.*", features = ["ecma_plugin_transform", "__parser", "ecma_codegen"] }
 swc_ecma_parser = {version = "0.141.0", features = ["swc_ecma_visit", "debug"]}
 toml = "0.8.2"
+minijinja = { version = "1.0.0", features = ["loader", "json", "urlencode", "preserve_order", "unstable_machinery_serde"] }
 
 [profile.dev]
 opt-level = 1

@@ -1,18 +1,19 @@
 use std::{
+    collections::{BTreeMap, HashMap},
     fs::{self, read_to_string},
     path::Path,
-};
-
-use lightningcss::{
-    stylesheet::{ParserOptions, PrinterOptions, StyleSheet},
-    visitor::Visit,
 };
 
 use crate::{
     config::{read_config, Config},
     visit_class::check_html,
+    visit_macros::check_macro,
     visit_map::check_js,
     visit_selectors::ClassVisitor,
+};
+use lightningcss::{
+    stylesheet::{ParserOptions, PrinterOptions, StyleSheet},
+    visitor::Visit,
 };
 
 pub fn start_all() {
@@ -27,12 +28,24 @@ pub fn start_all() {
                     css_walker.walk_tree(dir, &config);
                 }
 
-                let mut html_walker =
-                    HTMLWalker::new(&css_walker.class_visitor);
+                let mut macro_class_walker =
+                    MacroClassWalker::new(&css_walker.class_visitor);
+
+                if let Some(macros) = &config.macro_classes {
+                    for dir in macros {
+                        macro_class_walker.walk_tree(dir, &config);
+                    }
+                }
+
+                let mut html_walker = HTMLWalker::new(
+                    &css_walker.class_visitor,
+                    &macro_class_walker,
+                );
 
                 for dir in &config.html_dir {
                     html_walker.walk_tree(dir, &config);
                 }
+
                 let mut js_walker = JSWalker::new(&css_walker.class_visitor);
                 if let Some(js) = &config.js_map {
                     for dir in js {
@@ -68,7 +81,7 @@ fn handle_path(path: &Path) -> &Path {
 }
 
 trait TreeWalker {
-    fn walk(&mut self, old_content: String) -> Option<String>;
+    fn walk(&mut self, old_content: String, path: &Path) -> Option<String>;
 
     fn write(&self, path: &Path, new_content: Option<&str>, config: &Config) {
         let output_path = Path::new(&config.output_dir);
@@ -89,7 +102,9 @@ trait TreeWalker {
                 if let Ok(meta) = path.metadata() {
                     if meta.is_file() {
                         if let Ok(old_content) = read_to_string(path.path()) {
-                            if let Some(new_content) = self.walk(old_content) {
+                            if let Some(new_content) =
+                                self.walk(old_content, &path.path())
+                            {
                                 self.write(
                                     &path.path(),
                                     Some(&new_content),
@@ -100,7 +115,9 @@ trait TreeWalker {
                             self.write(&path.path(), None, config)
                         }
                     } else if meta.is_dir() {
-                        self.walk_tree(dir, config);
+                        if let Some(path) = path.path().to_str() {
+                            self.walk_tree(&path.to_string(), config);
+                        }
                     }
                 }
             }
@@ -114,7 +131,7 @@ struct CSSWalker {
 }
 
 impl TreeWalker for CSSWalker {
-    fn walk(&mut self, old_content: String) -> Option<String> {
+    fn walk(&mut self, old_content: String, _: &Path) -> Option<String> {
         let a = StyleSheet::parse(&old_content, ParserOptions::default());
         if let Ok(mut stylesheet) = a {
             let _ = stylesheet.visit(&mut self.class_visitor);
@@ -132,16 +149,30 @@ impl TreeWalker for CSSWalker {
 
 struct HTMLWalker<'a> {
     pub class_visitor: &'a ClassVisitor,
+    pub macros_walker: &'a MacroClassWalker<'a>,
 }
 
 impl<'a> HTMLWalker<'a> {
-    pub fn new(class_visitor: &'a ClassVisitor) -> Self {
-        Self { class_visitor }
+    pub fn new(
+        class_visitor: &'a ClassVisitor,
+        macros_walker: &'a MacroClassWalker,
+    ) -> Self {
+        Self {
+            class_visitor,
+            macros_walker,
+        }
     }
 }
 
 impl<'a> TreeWalker for HTMLWalker<'a> {
-    fn walk(&mut self, old_content: String) -> Option<String> {
+    fn walk(&mut self, mut old_content: String, path: &Path) -> Option<String> {
+        if let Some(updated_macros) =
+            self.macros_walker.macros.get(path.to_str().unwrap())
+        {
+            for m in updated_macros {
+                old_content = old_content.replace(m.0, m.1);
+            }
+        }
         if let Ok(html) = check_html(&old_content, self.class_visitor) {
             return Some(html);
         }
@@ -160,12 +191,36 @@ impl<'a> JSWalker<'a> {
 }
 
 impl<'a> TreeWalker for JSWalker<'a> {
-    fn walk(&mut self, old_content: String) -> Option<String> {
+    fn walk(&mut self, old_content: String, _: &Path) -> Option<String> {
         if let Some(html) = check_js(&old_content, self.class_visitor) {
             if let Ok(html) = String::from_utf8(html) {
                 return Some(html);
             }
         }
         None
+    }
+}
+
+pub struct MacroClassWalker<'a> {
+    pub class_visitor: &'a ClassVisitor,
+    pub macros: HashMap<String, BTreeMap<String, String>>,
+}
+
+impl<'a> MacroClassWalker<'a> {
+    pub fn new(class_visitor: &'a ClassVisitor) -> Self {
+        Self {
+            class_visitor,
+            macros: HashMap::new(),
+        }
+    }
+
+    pub fn insert(&mut self, path: String, map: BTreeMap<String, String>) {
+        self.macros.insert(path, map);
+    }
+}
+
+impl<'a> TreeWalker for MacroClassWalker<'a> {
+    fn walk(&mut self, old_content: String, path: &Path) -> Option<String> {
+        check_macro(old_content, self.class_visitor, self, path)
     }
 }

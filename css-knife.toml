@@ -1,4 +1,5 @@
 html_dir = ["web/templates"]
+macro_classes = ["web/templates/macros"]
 css_dir = ["web/css"]
 js_map = ["web/js/tailwind"]
 output_dir = "prod"
