@@ -22,7 +22,7 @@ pub fn start_all() {
         Ok(config) => {
             let validate = config.validate();
             if config.validate().is_ok() {
-                let mut css_walker = CSSWalker::default();
+                let mut css_walker = CSSWalker::new(&config.ignored_files);
 
                 for dir in &config.css_dir {
                     css_walker.walk_tree(dir, &config);
@@ -125,13 +125,34 @@ trait TreeWalker {
     }
 }
 
-#[derive(Default)]
-struct CSSWalker {
+struct CSSWalker<'a> {
     pub class_visitor: ClassVisitor,
+    pub ignored: &'a Option<Vec<String>>,
 }
 
-impl TreeWalker for CSSWalker {
-    fn walk(&mut self, old_content: String, _: &Path) -> Option<String> {
+impl<'a> CSSWalker<'a> {
+    pub fn new(ignored: &'a Option<Vec<String>>) -> Self {
+        Self {
+            class_visitor: ClassVisitor::default(),
+            ignored,
+        }
+    }
+
+    pub fn is_ignored(&self, path: &Path) -> bool {
+        if let Some(ignored) = self.ignored {
+            if let Some(path) = path.to_str() {
+                return ignored.contains(&path.to_string());
+            }
+        }
+        false
+    }
+}
+
+impl<'a> TreeWalker for CSSWalker<'a> {
+    fn walk(&mut self, old_content: String, path: &Path) -> Option<String> {
+        if self.is_ignored(path) {
+            return None;
+        }
         let a = StyleSheet::parse(&old_content, ParserOptions::default());
         if let Ok(mut stylesheet) = a {
             let _ = stylesheet.visit(&mut self.class_visitor);

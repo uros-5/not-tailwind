@@ -8,7 +8,7 @@ pub struct Config {
     pub output_dir: String,
     pub assets_dir: Option<Vec<String>>,
     pub js_map: Option<Vec<String>>,
-    pub ignored_css_files: Option<Vec<String>>,
+    pub ignored_files: Option<Vec<String>>,
     pub macro_classes: Option<Vec<String>>,
 }
 
