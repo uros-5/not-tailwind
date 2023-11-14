@@ -16,7 +16,8 @@ pub fn check_macro(
     for result in tokenizer.flatten() {
         match result.0 {
             Token::Ident(ident) => {
-                if ident == "class" {
+                let ident = ident.to_lowercase();
+                if ident.ends_with("class") {
                     visitor.counter = 1;
                 } else {
                     visitor.counter = 0;

@@ -1,6 +1,6 @@
 html_dir = ["web/templates"]
 macro_classes = ["web/templates/macros"]
 css_dir = ["web/css"]
-js_map = ["web/js/tailwind"]
+# js_map = ["web/js/tailwind"]
+# ignored_files = ["web/css/index.css"]
 output_dir = "prod"
-ignored_files = ["web/css/index.css"]
