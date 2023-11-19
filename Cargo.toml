@@ -29,3 +29,7 @@ opt-level = 1
 [profile.release]
 strip = true
 opt-level = 3
+
+[[bin]]
+name = "css-knife"
+path = "src/main.rs"
