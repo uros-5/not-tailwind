@@ -46,10 +46,9 @@ pub fn check_js(
                         Some(&mut srcmap),
                     ),
                 };
-                if let Some(module) = program.as_script() {
-                    if emitter.emit_script(module).is_ok() {
-                        return Some(code);
-                    }
+                let module = program.as_script()?;
+                if emitter.emit_script(module).is_ok() {
+                    return Some(code);
                 }
                 None
             }

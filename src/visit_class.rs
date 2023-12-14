@@ -25,6 +25,7 @@ pub fn check_html(
                     .collect::<Vec<String>>()
                     .join(" ");
                 let _r = el.set_attribute("class", &classes);
+                el.remove_attribute("hx-lsp");
 
                 Ok(())
             })],

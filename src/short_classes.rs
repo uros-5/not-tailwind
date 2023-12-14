@@ -31,17 +31,16 @@ impl Default for ClassIter {
 impl ClassContainer {
     pub fn add(&mut self, key: String, token: CSSToken) -> Option<String> {
         let index = token as usize;
-        if let Some(map) = self.container.get_mut(index) {
-            let oldclass = css_to_html(&key);
-            match map.entry(oldclass) {
-                Entry::Vacant(entry) => {
-                    if let Some(new) = self.class_name[index].next() {
-                        return Some(entry.insert(new_class(&new)).to_string());
-                    }
+        let map = self.container.get_mut(index)?;
+        let oldclass = css_to_html(&key);
+        match map.entry(oldclass) {
+            Entry::Vacant(entry) => {
+                if let Some(new) = self.class_name[index].next() {
+                    return Some(entry.insert(new_class(&new)).to_string());
                 }
-                Entry::Occupied(entry) => {
-                    return Some(entry.get().clone());
-                }
+            }
+            Entry::Occupied(entry) => {
+                return Some(entry.get().clone());
             }
         }
         None
@@ -49,12 +48,9 @@ impl ClassContainer {
 
     pub fn get(&self, key: String, container: CSSToken) -> Option<String> {
         let index = container as usize;
-        if let Some(map) = self.container.get(index) {
-            if let Some(v) = map.get(&key) {
-                return Some(v.to_string());
-            }
-        }
-        None
+        let map = self.container.get(index)?;
+        let v = map.get(&key)?;
+        Some(v.to_string())
     }
 
     pub fn into_file(&self, stylesheet: StyleSheet) {
