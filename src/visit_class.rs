@@ -13,12 +13,24 @@ pub fn check_html(
         Settings {
             element_content_handlers: vec![element!("[class]", |el| {
                 let classes = el.get_attribute("class").unwrap();
+                let mut in_expr = false;
                 let classes = classes.split(' ');
                 let classes = classes
                     .into_iter()
                     .map(|c| {
-                        if let Some(class) = msv.get(c) {
-                            return class;
+                        if c.ends_with("{{") {
+                            in_expr = true;
+                        } else if c.ends_with("}}") {
+                            in_expr = false
+                        }
+                        let single = c.contains('\'');
+                        let double = c.contains('"');
+                        if in_expr && !single && !double {
+                            return c.to_string();
+                        }
+                        let c2 = c.replace(['\"', '\''], "");
+                        if let Some(class) = msv.get(&c2) {
+                            return c.replace(&c2, &class);
                         }
                         c.to_string()
                     })
