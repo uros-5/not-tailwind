@@ -13,7 +13,7 @@ pub struct Config {
 }
 
 pub fn read_config<'a>() -> Result<Config, ConfigError<'a>> {
-    match std::fs::read_to_string("css-knife.toml") {
+    match std::fs::read_to_string("not-tailwind.toml") {
         Ok(s) => match toml::from_str::<Config>(&s) {
             Ok(config) => Ok(config),
             Err(e) => Err(ConfigError::ConfigNotFound(e.to_string())),
