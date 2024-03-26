@@ -1,6 +1,6 @@
 use std::{collections::BTreeMap, path::Path};
 
-use minijinja::machinery::{self, Token};
+use minijinja::machinery::{self, Token, WhitespaceConfig};
 
 use crate::{starter::MacroClassWalker, visit_selectors::ClassVisitor};
 
@@ -11,7 +11,7 @@ pub fn check_macro(
     path: &Path,
 ) -> Option<String> {
     let tokenizer =
-        machinery::tokenize(&old_content, false, Default::default());
+        machinery::tokenize(&old_content, false, Default::default(), WhitespaceConfig::default());
     let mut visitor = MacroVisitor::default();
     for result in tokenizer.flatten() {
         match result.0 {

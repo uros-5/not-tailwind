@@ -2,8 +2,8 @@
   <a href="https://github.com/uros-5/not-tailwind#gh-light-mode-only"><img src="assets/logo.svg#gh-light-mode-only"        width="300px" alt="not-tailwind logo"/></a>
   <a href="https://github.com/uros-5/not-tailwind#gh-dark-mode-only"><img src="assets/logo.darkmode.svg#gh-dark-mode-only" width="300px" alt="not-tailwind logo"/></a>
   <br>
-  <a href="https://crates.io/crates/not-tailwind"><img alt="crates.io" src="https://img.shields.io/crates/v/not-tailwind.svg?style=for-the-badge&color=bc3f48&logo=rust" height="20"></a>
-  <a href="https://github.com/uros-5/not-tailwind/actions?query=branch%3Amain"><img alt="build status" src="https://img.shields.io/github/actions/workflow/status/uros-5/not-tailwind/release.yml?branch=main&style=for-the-badge&logo=github" height="20"></a>
+  <a href="https://crates.io/crates/not-tailwind"><img alt="crates.io" src="https://img.shields.io/crates/v/not-tailwind.svg?style=for-the-badge&color=fdbb39&logo=rust" height="20"></a>
+  <a href="https://github.com/uros-5/not-tailwind/actions?query=branch%3Amain"><img alt="build status" src="https://img.shields.io/github/actions/workflow/status/uros-5/not-tailwind/build.yml?branch=main&style=for-the-badge&logo=github" height="20"></a>
 </div>
 
 <h1 align="center">

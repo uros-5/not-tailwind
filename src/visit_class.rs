@@ -1,6 +1,6 @@
 use std::string::FromUtf8Error;
 
-use lol_html::{self, element, HtmlRewriter, Settings};
+use lol_html::{ element, HtmlRewriter, Settings};
 
 use crate::visit_selectors::ClassVisitor;
 
