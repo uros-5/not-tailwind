@@ -21,7 +21,7 @@ pub fn start_all() {
     match config {
         Ok(config) => {
             let validate = config.validate();
-            if config.validate().is_ok() {
+            if validate.is_ok() {
                 let mut css_walker = CSSWalker::new(&config.ignored_files);
 
                 for dir in &config.css_dir {

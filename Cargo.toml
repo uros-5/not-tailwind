@@ -1,6 +1,6 @@
 [package]
 name = "not-tailwind"
-version = "0.1.8"
+version = "0.1.9"
 edition = "2021"
 authors = ["uros-5"]
 license = "MIT"
@@ -18,7 +18,7 @@ parcel_selectors = { version="0.28.0"  }
 scraper = "0.21.0"
 serde = {version = "1.0.215", features = ["derive"]}
 string_cache = "0.8.7"
-swc_core = { version = "0.83.*", features = ["ecma_plugin_transform", "__parser", "ecma_codegen"] }
+swc_core = { version = "17.0.0", features = ["ecma_plugin_transform", "__parser", "ecma_codegen", "ecma_ast"] }
 toml = "0.8.2"
 minijinja = { version = "2.5.0", features = ["loader", "json", "urlencode", "preserve_order", "unstable_machinery_serde"] }
 
