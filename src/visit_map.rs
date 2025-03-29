@@ -2,10 +2,10 @@ use crate::visit_selectors::ClassVisitor;
 
 use swc_core::{
     common::{sync::Lrc, FileName, SourceMap},
-    ecma::codegen::{text_writer::JsWriter, Emitter},
     ecma::{
+        codegen::{text_writer::JsWriter, Emitter},
         parser::{lexer::Lexer, Parser, StringInput},
-        visit::{as_folder, FoldWith, VisitMut},
+        visit::{Fold, VisitMut, VisitMutWith},
     },
 };
 
@@ -13,10 +13,10 @@ pub fn check_js(
     old_content: &String,
     class_visitor: &ClassVisitor,
 ) -> Option<Vec<u8>> {
-    let map_visitor = MapVisitor::new(class_visitor);
+    let mut map_visitor = MapVisitor::new(class_visitor);
     let cm: Lrc<SourceMap> = Default::default();
     let fm = cm.new_source_file(
-        FileName::Custom("test.js".into()),
+        Lrc::new(FileName::Custom("test.js".into())),
         old_content.into(),
     );
     let lexer = Lexer::new(
@@ -26,13 +26,13 @@ pub fn check_js(
         None,
     );
     let mut parser = Parser::new_from(lexer);
-    let s = parser.parse_program();
+    let s = parser.parse_module();
     let mut code = vec![];
     let mut srcmap = vec![];
 
     match s {
-        Ok(program) => {
-            let program = program.fold_with(&mut as_folder(map_visitor));
+        Ok(mut module) => {
+            module.visit_mut_with(&mut map_visitor);
 
             {
                 let mut emitter = Emitter {
@@ -46,8 +46,7 @@ pub fn check_js(
                         Some(&mut srcmap),
                     ),
                 };
-                let module = program.as_script()?;
-                if emitter.emit_script(module).is_ok() {
+                if emitter.emit_module(&module).is_ok() {
                     return Some(code);
                 }
                 None
@@ -73,8 +72,10 @@ impl<'a> MapVisitor<'a> {
     }
 }
 
+impl<'a> Fold for MapVisitor<'a> {}
+
 impl<'a> VisitMut for MapVisitor<'a> {
-    fn visit_mut_ident(&mut self, n: &mut swc_core::ecma::ast::Ident) {
+    fn visit_mut_ident_name(&mut self, n: &mut swc_core::ecma::ast::IdentName) {
         let s = n.to_string();
         if s.starts_with("set") {
             self.is_set = true;
@@ -88,9 +89,14 @@ impl<'a> VisitMut for MapVisitor<'a> {
         if self.is_set {
             match &self.first_string {
                 Some(s) => {
-                    let new_str = &self.class_visitor.get(s);
+                    let mut custom_variable = "";
+                    let new_str = &self.class_visitor.get(s).or_else(|| {
+                        custom_variable = "--";
+                        self.class_visitor.get_custom_property(s)
+                    });
                     if let Some(new_str) = new_str {
-                        let new_str = format!("'{}'", new_str);
+                        let new_str =
+                            format!("'{}{}'", custom_variable, new_str);
                         n.raw = Some(new_str.into());
                     }
                     self.is_set = false;

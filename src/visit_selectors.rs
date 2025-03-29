@@ -22,6 +22,11 @@ impl ClassVisitor {
     pub fn get(&self, class: &str) -> Option<String> {
         self.container.get(class.to_owned(), CSSToken::Class)
     }
+
+    pub fn get_custom_property(&self, class: &str) -> Option<String> {
+        self.container
+            .get(class.to_owned(), CSSToken::CustomProperty)
+    }
 }
 
 impl<'i> Visitor<'i> for ClassVisitor {

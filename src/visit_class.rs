@@ -1,6 +1,6 @@
 use std::string::FromUtf8Error;
 
-use lol_html::{ element, HtmlRewriter, Settings};
+use lol_html::{element, HtmlRewriter, Settings};
 
 use crate::visit_selectors::ClassVisitor;
 
@@ -12,32 +12,37 @@ pub fn check_html(
     let mut rewriter = HtmlRewriter::new(
         Settings {
             element_content_handlers: vec![element!("[class]", |el| {
-                let classes = el.get_attribute("class").unwrap();
-                let mut in_expr = false;
-                let classes = classes.split(' ');
-                let classes = classes
-                    .into_iter()
-                    .map(|c| {
-                        if c.ends_with("{{") {
-                            in_expr = true;
-                        } else if c.ends_with("}}") {
-                            in_expr = false
-                        }
-                        let single = c.contains('\'');
-                        let double = c.contains('"');
-                        if in_expr && !single && !double {
-                            return c.to_string();
-                        }
-                        let c2 = c.replace(['\"', '\''], "");
-                        if let Some(class) = msv.get(&c2) {
-                            return c.replace(&c2, &class);
-                        }
-                        c.to_string()
-                    })
-                    .collect::<Vec<String>>()
-                    .join(" ");
-                let _r = el.set_attribute("class", &classes);
-                el.remove_attribute("hx-lsp");
+                for cl in ["class", ":class"] {
+                    let classes = el.get_attribute(cl).unwrap_or_default();
+                    let mut in_expr = false;
+                    let classes = classes.split(' ');
+                    let classes = classes
+                        .into_iter()
+                        .map(|c| {
+                            if c.ends_with("{{") {
+                                in_expr = true;
+                            } else if c.ends_with("}}") {
+                                in_expr = false
+                            }
+                            let single = c.contains('\'');
+                            let double = c.contains('"');
+                            if in_expr && !single && !double {
+                                return c.to_string();
+                            }
+                            let c2 = c.replace("\"", "").replace("'", "");
+                            if let Some(class) = msv.get(&c2) {
+                                return c.replace(&c2, &class);
+                            }
+                            c.to_string()
+                        })
+                        .collect::<Vec<String>>()
+                        .join(" ");
+
+                    if classes != "" {
+                        let _r = el.set_attribute(cl, &classes);
+                        el.remove_attribute("hx-lsp");
+                    }
+                }
 
                 Ok(())
             })],
