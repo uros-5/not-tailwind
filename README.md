@@ -29,14 +29,20 @@ And here is in production:
   </div>
 ```
 
-Configuration(*not-tailwind.toml*):
+Usage: not-tailwind
 
-```toml
-html_dir = ["web/src/templates"]
-css_dir = ["web/src/css"]
-js_dir = ["web/src/js"]
-assets_dir = ["web/src/svg"]
-output_dir = "prod"
+```
+Options:
+  -r, --run <RUN>...          Build for production. Specify in which files to search
+      --build-ts-map          Build TypeScript map
+  -o, --output <OUTPUT>       Specify output directory(default directory is not-tailwind). Make sure it is in .gitignore
+  -i, --ignored <IGNORED>...  CSS files to ignore
+  -h, --help                  Print help
+  -V, --version               Print version
+```
+
+```sh
+not-tailwind --build-ts-map --run html ts j2 --ignored ./public/main.css
 ```
 
 ## Dependencies:
