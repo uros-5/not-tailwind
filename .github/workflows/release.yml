@@ -27,7 +27,7 @@ jobs:
           ARCHIVE_TYPES: ${{ matrix.archive }}
 
       - name: Upload the binaries
-        uses: softprops/action-gh-release@v4
+        uses: softprops/action-gh-release@v2
         with:
           files: |
             ${{ env.ASSET }}
