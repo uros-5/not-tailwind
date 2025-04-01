@@ -29,7 +29,6 @@ pub fn check_js(
     let s = parser.parse_module();
     let mut code = vec![];
     let mut srcmap = vec![];
-
     match s {
         Ok(mut module) => {
             module.visit_mut_with(&mut map_visitor);
@@ -52,7 +51,10 @@ pub fn check_js(
                 None
             }
         }
-        Err(_) => None,
+        Err(e) => {
+            dbg!(e);
+            None
+        }
     }
 }
 

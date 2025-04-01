@@ -1,6 +1,6 @@
 [package]
 name = "not-tailwind"
-version = "0.1.9"
+version = "0.2.0"
 edition = "2021"
 authors = ["uros-5"]
 license = "MIT"
@@ -18,9 +18,13 @@ parcel_selectors = { version="0.28.0"  }
 scraper = "0.21.0"
 serde = {version = "1.0.215", features = ["derive"]}
 string_cache = "0.8.7"
-swc_core = { version = "17.0.0", features = ["ecma_plugin_transform", "__parser", "ecma_codegen", "ecma_ast"] }
+swc_core = { version = "17.0.0", features = ["ecma_plugin_transform", "__parser", "ecma_codegen", "ecma_ast", "typescript"] }
 toml = "0.8.2"
 minijinja = { version = "2.5.0", features = ["loader", "json", "urlencode", "preserve_order", "unstable_machinery_serde"] }
+clap = { version = "4.5.34", features = ["derive"] }
+tree-sitter-vue = { version = "0.0.1",  git = "https://github.com/zed-industries/tree-sitter-vue"  }
+tree-sitter = "0.20.10"
+ignore = "0.4.23"
 
 [profile.dev]
 opt-level = 1
